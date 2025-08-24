@@ -1,0 +1,28 @@
+{
+  "name": "family-100",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Educational Family 100 style picture guessing game for students",
+  "keywords": [
+    "game",
+    "education",
+    "vocabulary",
+    "students",
+    "family-feud",
+    "typescript"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2"
+  }
+}
