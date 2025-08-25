@@ -42,7 +42,8 @@ export class FamilyGame {
       totalQuestions: questions.length,
       lives: 3,
       isRevealMode: false,
-      fromRevealMode: false
+      fromRevealMode: false,
+      revealedLetters: new Map()
     };
   }
 
@@ -169,6 +170,46 @@ export class FamilyGame {
     return hints[hintIndex];
   }
 
+  getLetterHint(): { word: string; revealedPositions: number[] } | null {
+    // Get a random unrevealed answer
+    const unrevealedAnswers = this.currentQuestion.answers.filter(answer => 
+      !this.gameState.foundAnswers.has(answer.word.toLowerCase())
+    );
+    
+    if (unrevealedAnswers.length === 0) return null;
+    
+    // Pick a random unrevealed answer
+    const randomAnswer = unrevealedAnswers[Math.floor(Math.random() * unrevealedAnswers.length)];
+    const word = randomAnswer.word.toLowerCase();
+    
+    // Get or initialize revealed letters for this word
+    if (!this.gameState.revealedLetters) {
+      this.gameState.revealedLetters = new Map();
+    }
+    
+    let revealedPositions = this.gameState.revealedLetters.get(word) || new Set();
+    
+    // Find positions that can be revealed (not already revealed)
+    const availablePositions: number[] = [];
+    for (let i = 0; i < word.length; i++) {
+      if (!revealedPositions.has(i) && word[i] !== ' ') {
+        availablePositions.push(i);
+      }
+    }
+    
+    if (availablePositions.length === 0) return null;
+    
+    // Reveal a random letter
+    const positionToReveal = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+    revealedPositions.add(positionToReveal);
+    this.gameState.revealedLetters.set(word, revealedPositions);
+    
+    return {
+      word: randomAnswer.word,
+      revealedPositions: Array.from(revealedPositions)
+    };
+  }
+
   skipQuestion(): void {
     this.completeQuestion();
   }
@@ -195,6 +236,7 @@ export class FamilyGame {
     this.gameState.wrongAttempts = 0;
     this.gameState.isRevealMode = false;
     this.gameState.fromRevealMode = false; // Reset for next question
+    this.gameState.revealedLetters?.clear(); // Clear revealed letters for new question
   }
 
   getProgress(): { current: number; total: number; percentage: number } {

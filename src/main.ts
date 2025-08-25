@@ -67,8 +67,8 @@ class FamilyGameApp {
   }
 
   private startGame(practice: boolean = false): void {
-    // Get random questions for the game
-    const questions = getRandomQuestions(practice ? 3 : 5);
+    // Get random questions for the game - use all available questions unless practice mode
+    const questions = practice ? getRandomQuestions(3) : getRandomQuestions();
     
     // Initialize game with callbacks
     this.game = new FamilyGame(questions, {
@@ -172,7 +172,8 @@ class FamilyGameApp {
       // Update answer board
       const foundAnswers = this.game.getGameState().foundAnswers;
       const currentQuestion = this.game.getCurrentQuestion();
-      this.ui.updateAnswerBoard(currentQuestion.answers, foundAnswers, this.game.isInRevealMode());
+      const gameState = this.game.getGameState();
+      this.ui.updateAnswerBoard(currentQuestion.answers, foundAnswers, this.game.isInRevealMode(), gameState.revealedLetters);
       
       // Animate the revealed answer
       const answerElement = document.querySelector(`[data-answer="${result.answer.word}"]`) as HTMLElement;
@@ -203,7 +204,8 @@ class FamilyGameApp {
       // Update answer board with the new revealed answer
       const foundAnswers = this.game.getGameState().foundAnswers;
       const currentQuestion = this.game.getCurrentQuestion();
-      this.ui.updateAnswerBoard(currentQuestion.answers, foundAnswers, this.game.isInRevealMode());
+      const gameState = this.game.getGameState();
+      this.ui.updateAnswerBoard(currentQuestion.answers, foundAnswers, this.game.isInRevealMode(), gameState.revealedLetters);
       
       // Re-attach event listeners to the new DOM elements
       this.setupRevealModeListeners();
@@ -239,9 +241,21 @@ class FamilyGameApp {
     if (!this.game) return;
     
     const hint = this.game.getHint();
+    const letterHint = this.game.getLetterHint();
+    
     if (hint) {
       this.ui.showHint(hint);
-    } else {
+    }
+    
+    if (letterHint) {
+      // Update answer board to show revealed letters
+      const foundAnswers = this.game.getGameState().foundAnswers;
+      const currentQuestion = this.game.getCurrentQuestion();
+      const gameState = this.game.getGameState();
+      this.ui.updateAnswerBoard(currentQuestion.answers, foundAnswers, this.game.isInRevealMode(), gameState.revealedLetters);
+    }
+    
+    if (!hint && !letterHint) {
       this.ui.showFeedback('No hints available for this question', 'info');
     }
   }

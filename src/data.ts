@@ -249,8 +249,12 @@ export const sampleQuestions: Question[] = [
 ];
 
 // Utility functions for game data
-export const getRandomQuestions = (count: number = 5): Question[] => {
+export const getRandomQuestions = (count?: number): Question[] => {
   const shuffled = [...sampleQuestions].sort(() => 0.5 - Math.random());
+  // If no count specified, return all questions
+  if (count === undefined) {
+    return shuffled;
+  }
   return shuffled.slice(0, Math.min(count, sampleQuestions.length));
 };
 

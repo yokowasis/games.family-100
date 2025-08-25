@@ -141,7 +141,7 @@ export class UIManager {
               </div>
               
               <div class="answer-board p-6 space-y-3" id="answer-board">
-                ${this.renderAnswerSlots(question.answers, new Set(), gameState.isRevealMode || false)}
+                ${this.renderAnswerSlots(question.answers, new Set(), gameState.isRevealMode || false, gameState.revealedLetters)}
               </div>
               
               <!-- Category Badge -->
@@ -157,18 +157,43 @@ export class UIManager {
     `;
   }
 
-  private renderAnswerSlots(answers: Answer[], foundAnswers: Set<string>, isRevealMode: boolean = false): string {
+  private renderAnswerSlots(answers: Answer[], foundAnswers: Set<string>, isRevealMode: boolean = false, revealedLetters?: Map<string, Set<number>>): string {
     return answers
       .sort((a, b) => a.rank - b.rank)
       .map(answer => {
         const isFound = foundAnswers.has(answer.word.toLowerCase());
         const canReveal = isRevealMode && !isFound;
+        
+        // Create display word with revealed letters
+        let displayWord = answer.word.toUpperCase();
+        if (!isFound && revealedLetters) {
+          const revealedPositions = revealedLetters.get(answer.word.toLowerCase());
+          if (revealedPositions && revealedPositions.size > 0) {
+            displayWord = answer.word
+              .split('')
+              .map((char, index) => {
+                if (revealedPositions.has(index)) {
+                  return char.toUpperCase();
+                } else if (char === ' ') {
+                  return ' ';
+                } else {
+                  return '_';
+                }
+              })
+              .join('');
+          } else {
+            displayWord = `${answer.rank}. ${canReveal ? '???' : '???'}`;
+          }
+        } else if (!isFound) {
+          displayWord = `${answer.rank}. ${canReveal ? '???' : '???'}`;
+        }
+        
         return `
           <div class="answer-slot ${isFound ? 'revealed' : ''} ${canReveal ? 'clickable-reveal' : ''} p-4 rounded-xl text-center transition-all duration-500" 
                data-answer="${answer.word}" ${canReveal ? 'style="cursor: pointer;"' : ''}>
             <div class="flex justify-between items-center">
-              <span class="font-bold text-lg">
-                ${isFound ? answer.word.toUpperCase() : `${answer.rank}. ${canReveal ? '???' : '???'}`}
+              <span class="font-bold text-lg ${!isFound && revealedLetters?.get(answer.word.toLowerCase())?.size ? 'font-mono tracking-wider' : ''}">
+                ${displayWord}
               </span>
               <span class="text-2xl font-bold">
                 ${isFound ? answer.points : '??'}
@@ -180,10 +205,10 @@ export class UIManager {
       }).join('');
   }
 
-  updateAnswerBoard(answers: Answer[], foundAnswers: Set<string>, isRevealMode: boolean = false): void {
+  updateAnswerBoard(answers: Answer[], foundAnswers: Set<string>, isRevealMode: boolean = false, revealedLetters?: Map<string, Set<number>>): void {
     const answerBoard = document.getElementById('answer-board');
     if (answerBoard) {
-      answerBoard.innerHTML = this.renderAnswerSlots(answers, foundAnswers, isRevealMode);
+      answerBoard.innerHTML = this.renderAnswerSlots(answers, foundAnswers, isRevealMode, revealedLetters);
     }
     
     // Update found count

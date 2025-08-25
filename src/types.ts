@@ -27,6 +27,7 @@ export interface GameState {
   timeRemaining?: number;
   isRevealMode?: boolean; // true when player has lost and can click to reveal
   fromRevealMode?: boolean; // true when transitioning from reveal mode
+  revealedLetters?: Map<string, Set<number>>; // Map of word -> set of revealed letter positions
 }
 
 export interface GameStats {
